@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="uz-Cyrl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#141832">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MPRINT AI офис">
+<title>MPRINT AI офис</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: printing-plate floor plan — a 3×3 grid of rooms, each room one AI worker (n8n workflow), CMYK door bands; summary bar on top, cabinet drawer on click. */
+:root{
+  --paper:#f3f5f7;
+  --plate:#ffffff;
+  --ink:#16181d;
+  --muted:#5d6470;
+  --line:#dde2e8;
+  --accent:#0093c9;
+  --c:#00a3d9; --m:#d6247a; --y:#f2b705; --k:#2a2d34;
+  --ok:#1f9d55; --warn:#d98a00; --bad:#d63a2f; --off:#9aa1ab;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.06);
+  --display:"Unbounded","Manrope",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111418; --plate:#1a1e24; --ink:#eef1f5; --muted:#9aa3b0; --line:#2a3039;
+    --accent:#35b8ea; --k:#c9ced6; --off:#6b7380;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111418; --plate:#1a1e24; --ink:#eef1f5; --muted:#9aa3b0; --line:#2a3039;
+  --accent:#35b8ea; --k:#c9ced6; --off:#6b7380;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:32px 32px;background-position:-1px -1px;
+  color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:grid;gap:18px}
+.hidden{display:none!important}
+.small{font-size:12px;color:var(--muted)}
+.back{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--accent);text-decoration:none;padding:6px 0}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gate{min-height:100%;display:grid;place-items:center;padding:24px}
+.gcard{width:min(380px,100%);background:var(--plate);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px;display:grid;gap:14px;border-top:6px solid var(--m)}
+.gcard h1{font-size:20px}
+.gcard label{font-size:13px;color:var(--muted);display:grid;gap:6px}
+.gcard input{font:500 16px var(--body);padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.gcard input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.gcard .go{font:700 15px var(--body);padding:12px;border-radius:10px;border:0;background:var(--k);color:var(--plate);cursor:pointer}
+.gmsg{font-size:13px;color:var(--bad);min-height:1em}
+html,body{height:100%}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.reg{width:34px;height:34px;flex:none}
+h1{font-family:var(--display);font-size:24px;line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.fresh{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.btn{font:600 13px var(--body);border:1px solid var(--line);background:var(--plate);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.room:focus-visible,.x:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.tile b{display:block;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile span{font-size:12.5px;color:var(--muted)}
+.tile.bad b{color:var(--bad)}
+@media (max-width:640px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.notice{background:var(--plate);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:10px 14px;font-size:14px;display:none;gap:10px;align-items:center;flex-wrap:wrap}
+.notice.show{display:flex}
+
+.floor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.floor{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.floor{grid-template-columns:1fr}}
+.room{
+  position:relative;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--plate);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  padding:0;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;min-height:220px;
+  transition:transform .15s ease,border-color .15s ease;
+}
+.room:hover{transform:translateY(-2px);border-color:var(--accent)}
+.door{height:6px;background:var(--band)}
+.rbody{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:14px 14px 8px;align-items:start}
+.desk{width:72px;height:72px}
+.rname{font-family:var(--display);font-size:15px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:8px}
+.lamp{width:10px;height:10px;border-radius:50%;background:var(--off);flex:none}
+.lamp.ok{background:var(--ok)} .lamp.warn{background:var(--warn)} .lamp.bad{background:var(--bad)}
+.lamp.live{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.lamp.live{animation:none}.room{transition:none}}
+.role{font-size:13px;color:var(--muted);margin-top:4px}
+.bot{font-size:12px;color:var(--muted);margin-top:2px;word-break:break-all}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;margin-top:8px;border:1px solid currentColor}
+.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.bad{color:var(--bad)} .chip.off{color:var(--off)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px dashed var(--line);margin:0 14px;padding:10px 0 12px;gap:6px}
+.stats div{display:grid}
+.stats b{font-size:17px;font-variant-numeric:tabular-nums}
+.stats span{font-size:11.5px;color:var(--muted)}
+.stats .bad b{color:var(--bad)}
+.rmsg{font-size:12px;color:var(--bad);padding:0 14px 10px}
+
+/* cabinet drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.38);display:none}
+.scrim.show{display:block}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--plate);border-left:1px solid var(--line);
+  box-shadow:-12px 0 30px rgba(0,0,0,.15);transform:translateX(105%);transition:transform .2s ease;display:grid;grid-template-rows:auto 1fr;z-index:5}
+.drawer.show{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.dhead{padding:16px 18px;border-bottom:1px solid var(--line);display:grid;gap:6px;border-top:6px solid var(--band,var(--accent))}
+.dtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dhead h2{font-family:var(--display);font-size:18px;margin:0}
+.x{border:0;background:transparent;color:var(--ink);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.dbody{overflow:auto;padding:14px 18px 24px;display:grid;gap:14px;align-content:start}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpis .tile{padding:10px}
+.kpis .tile b{font-size:19px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0}
+.runs{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.runs li{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
+.runs li:first-child{border-top:0}
+.st{font-weight:700;font-size:12px}
+.st.success{color:var(--ok)} .st.error,.st.crashed{color:var(--bad)} .st.running,.st.waiting,.st.new{color:var(--accent)}
+.link{color:var(--accent);font-weight:700;text-decoration:none}
+.link:hover{text-decoration:underline}
+.note{font-size:13px;color:var(--muted)}
+footer{font-size:12.5px;color:var(--muted)}
+
+/* group watch */
+.watch{background:var(--plate);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.whead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);border-top:6px solid var(--m)}
+.whead h2{font-family:var(--display);font-size:17px;margin:0 0 4px}
+.wchips{display:flex;gap:8px;flex-wrap:wrap}
+.wlist{display:grid}
+.req{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:start;padding:11px 18px;border-top:1px solid var(--line)}
+.req:first-child{border-top:0}
+.req .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;padding-top:1px}
+.req .who{font-size:13px;color:var(--muted)}
+.req .who b{color:var(--ink);font-weight:700}
+.req .what{font-size:14.5px;margin-top:2px}
+.req .why{font-size:12.5px;color:var(--muted);margin-top:3px}
+.req .chip{margin-top:0;white-space:nowrap}
+.wlist > .note{padding:16px 18px}
+@media (max-width:520px){.req{grid-template-columns:1fr auto}.req .t{grid-column:1 / -1}}
+</style>
+</head>
+<body>
+<section class="gate hidden" id="gate" aria-labelledby="gTitle">
+  <form class="gcard" id="gateForm" autocomplete="off">
+    <svg class="reg" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="10" fill="none" stroke="var(--k)" stroke-width="2"/><circle cx="17" cy="17" r="4" fill="var(--m)"/><path d="M17 1v32M1 17h32" stroke="var(--k)" stroke-width="2"/></svg>
+    <h1 id="gTitle">MPRINT AI офис</h1>
+    <div class="note">Бу бўлим фақат раҳбар учун. Кириш кодини бир марта киритинг, кейин телефон эслаб қолади.</div>
+    <label for="kod">Кириш коди<input id="kod" name="kod" type="password" inputmode="text" autocapitalize="off" spellcheck="false"></label>
+    <div class="gmsg" id="gateMsg" role="alert"></div>
+    <button class="go" type="submit">Кириш</button>
+    <a class="back" href="./">← CRM'га қайтиш</a>
+  </form>
+</section>
+<div class="wrap" id="app">
+  <header>
+    <div class="brand">
+      <svg class="reg" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="10" fill="none" stroke="var(--k)" stroke-width="2"/><circle cx="17" cy="17" r="4" fill="var(--m)"/><path d="M17 1v32M1 17h32" stroke="var(--k)" stroke-width="2"/></svg>
+      <div>
+        <h1>MPRINT AI офиси</h1>
+        <div class="sub">Ҳар бир хона битта AI ходим (n8n'даги бот). Бугунги иш ва ҳолати жонли кўринади.</div>
+      </div>
+    </div>
+    <div class="actions"><a class="back" href="./">← CRM</a><span id="fresh">Маълумот юкланмоқда…</span><button class="btn" id="refresh" type="button">Янгилаш</button><button class="back" id="logout" type="button" style="border:0;background:none;cursor:pointer;color:var(--muted)">Чиқиш</button></div>
+  </header>
+
+  <section class="summary" aria-label="Умумий">
+    <div class="tile"><b id="sRuns">—</b><span>Бугун бажарилган ишлар</span></div>
+    <div class="tile" id="sErrTile"><b id="sErr">—</b><span>Бугунги хатолар</span></div>
+    <div class="tile"><b id="sLive">—</b><span>Ишлаётган ходимлар</span></div>
+    <div class="tile"><b id="sIdle">—</b><span>Эътибор керак</span></div>
+  </section>
+
+  <div class="notice" id="notice" role="status"></div>
+
+  <main class="floor" id="floor" aria-label="Ходимлар хоналари"></main>
+
+  <section class="watch" aria-labelledby="wTitle">
+    <div class="whead">
+      <div>
+        <h2 id="wTitle">Гуруҳ кузатуви · бугун</h2>
+        <div class="note">Гуруҳ ёзишмаларидан AI топган сўровлар ва шикоятлар. Ҳар 30 дақиқада янгиланади.</div>
+      </div>
+      <div class="wchips" id="wChips"></div>
+    </div>
+    <div class="wlist" id="wList"><div class="note">Маълумот юкланмоқда…</div></div>
+  </section>
+
+  <footer>Ҳолат: 🟢 ишлаяпти · 🟡 узоқ вақт жим · 🔴 хато бор · ⚪ ўчирилган. Маълумот n8n'дан ҳар 5 дақиқада ва «Янгилаш» босилганда янгиланади.</footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="dTitle">
+  <div class="dhead" id="dhead">
+    <div class="dtop"><h2 id="dTitle">Кабинет</h2><button class="x" id="dClose" type="button" aria-label="Ёпиш">×</button></div>
+    <div class="note" id="dRole"></div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+
+<script>
+const API = "https://mprintaccount.app.n8n.cloud/webhook/mprint-ai-ofis";
+const N8N_URL = "https://mprintaccount.app.n8n.cloud/workflow/";
+const ROOMS = [
+  {wf:"5c9gOjyDVWVWU50z", name:"Директор", band:"var(--c)", bot:"@Mprint_asosiy_bot", kind:"event", idleH:72,
+   role:"Вазифа беради, «Бажардим» ва берувчи тасдиғини юритади."},
+  {wf:"YYHp3ZZWgRGFPs03", name:"Режачи", band:"var(--m)", bot:"@Mprint_asosiy_bot", kind:"schedule", idleH:42,
+   role:"09:00 кунлик режа, 10–16 соатлик эслатма, 17:00 кун якуни ҳисоботи."},
+  {wf:"SZfRFEsIZcHkAv2X", name:"Нархчи", band:"var(--y)", bot:"@MPRINT_NARX_XISOBLOVCHI_BOT", kind:"event", idleH:48,
+   role:"Типография буюртмаси нархини ҳисоблайди."},
+  {wf:"2xOuLQ94T5eZHGOG", name:"Ёрдамчи", band:"var(--k)", bot:"MPRINT Ёрдамчи", kind:"event", idleH:48,
+   role:"Гуруҳда 3 дақиқада жавоб берилмаса, ўзи жавоб беради. Гуруҳ хабарларини йиғади."},
+  {wf:"ylc5BeotLuoQiD5f", name:"CRM менежер", band:"var(--c)", bot:"@Mprint_CRM_bot", kind:"event", idleH:48,
+   role:"Менежерлар мижоз, дизайн ва нарх сўровини киритади."},
+  {wf:"lkKByYxQUQNT1OPJ", name:"CRM назоратчи", band:"var(--m)", bot:"@Mprint_CRM_bot", kind:"schedule", idleH:42,
+   role:"09:00 мижоз эслатмаси, соатлик нарх эслатмаси, 18:00 раҳбарга ҳисобот."},
+  {wf:"3cYNMuKJrOiEHg4l", name:"Ҳисобчи", band:"var(--y)", bot:"@mprint_hisobot_bot", kind:"schedule", idleH:26,
+   role:"Кунлик буюртмаларни жамлаб, БУХГАЛТЕР гуруҳига ҳисобот юборади."},
+  {wf:"F72c93jtouxusOMO", name:"Уйғотувчи", band:"var(--k)", bot:"Шерикка", kind:"schedule", idleH:26,
+   role:"Ҳар куни 09:00 да овозли «Жаноб, туринг» юборади."},
+  {wf:"kWfFpaYiaYKLANAu", name:"Кузатувчи", band:"var(--m)", bot:"Гуруҳ ёзишмалари", kind:"schedule", idleH:42,
+   role:"Гуруҳдаги сўров, жавоб ва шикоятларни топади, жавобсизларга эслатади."},
+  {wf:"UEMpL8xjMQvVKuEv", name:"Давоматчи", band:"var(--c)", bot:"Employee Attendance Bot", kind:"event", idleH:48,
+   role:"Ходимлар келди-кетди ва ойлик ҳисоби."}
+];
+
+let data = null;         // last good payload
+let loadErr = null;      // text of last failure
+let fetchedAt = 0;       // when the last good payload arrived (ms)
+let openWf = null;
+let loading = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TZ = 5*3600*1000;
+function tashkentDayStart(ms){ const t = ms + TZ; return t - (t % 86400000) - TZ; }
+function hhmm(iso){ const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0"); }
+function dmy(iso){ const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0"); }
+function ago(iso){
+  if(!iso) return "—";
+  const m = Math.round((Date.now()-Date.parse(iso))/60000);
+  if(m < 2) return "ҳозиргина";
+  if(m < 60) return m+" дақ. олдин";
+  const h = Math.round(m/60); if(h < 24) return h+" соат олдин";
+  return Math.round(h/24)+" кун олдин";
+}
+function getKod(){ try{ return localStorage.getItem("ai_ofis_kod") || ""; }catch(e){ return ""; } }
+function setKod(v){ try{ if(v) localStorage.setItem("ai_ofis_kod", v); else localStorage.removeItem("ai_ofis_kod"); }catch(e){} }
+
+function deskSVG(band, lit){
+  return `<svg class="desk" viewBox="0 0 72 72" aria-hidden="true">
+    <rect x="4" y="44" width="64" height="8" rx="2" fill="var(--line)"/>
+    <rect x="10" y="52" width="4" height="14" fill="var(--line)"/><rect x="58" y="52" width="4" height="14" fill="var(--line)"/>
+    <rect x="38" y="24" width="26" height="18" rx="2" fill="var(--k)"/>
+    <rect x="40" y="26" width="22" height="14" rx="1" fill="${lit ? band : "var(--off)"}" opacity="${lit ? .85 : .4}"/>
+    <rect x="49" y="42" width="4" height="3" fill="var(--k)"/>
+    <circle cx="20" cy="22" r="10" fill="var(--plate)" stroke="var(--k)" stroke-width="2"/>
+    <circle cx="16.5" cy="21" r="1.8" fill="var(--k)"/><circle cx="23.5" cy="21" r="1.8" fill="var(--k)"/>
+    <path d="M16 26q4 3 8 0" stroke="var(--k)" stroke-width="1.6" fill="none"/>
+    <path d="M20 12v-5" stroke="var(--k)" stroke-width="2"/><circle cx="20" cy="6" r="2.4" fill="${band}"/>
+    <rect x="11" y="32" width="18" height="12" rx="4" fill="${band}"/>
+  </svg>`;
+}
+
+function analyze(room){
+  const runs = (data && data.runs && data.runs[room.wf]) ? data.runs[room.wf].map(r => ({status:r.s, startedAt:r.t})) : [];
+  const have = !!data && !data.apiErr;
+  const today0 = tashkentDayStart(Date.now());
+  const todayRuns = runs.filter(r => Date.parse(r.startedAt) >= today0);
+  const isErr = r => r.status === "error" || r.status === "crashed";
+  const todayErr = todayRuns.filter(isErr);
+  const last = runs[0];
+  const lastErr = runs.find(isErr);
+  const active = data && data.active ? data.active[room.wf] : undefined;
+  let level = "unknown", label = data ? "Маълумот йўқ" : "Юкланмоқда";
+  if(active === false){ level = "off"; label = "Ўчирилган"; }
+  else if(have){
+    const hours = last ? (Date.now()-Date.parse(last.startedAt))/3600000 : Infinity;
+    if(last && isErr(last)){ level = "bad"; label = "Охирги иш хато"; }
+    else if(todayErr.length){ level = "bad"; label = "Бугун хато бўлган"; }
+    else if(hours > room.idleH){ level = "warn"; label = room.kind === "event" ? "Ишлатилмаяпти" : "Ишга тушмаяпти"; }
+    else { level = "ok"; label = "Ишлаяпти"; }
+  }
+  const live = last && (Date.now()-Date.parse(last.startedAt)) < 5*60000;
+  const capped = runs.length >= 100 && todayRuns.length === runs.length;
+  return {runs, have, todayRuns, todayErr, last, lastErr, active, level, label, live, capped};
+}
+
+function render(){
+  let sumRuns = 0, sumErr = 0, liveN = 0, attn = 0;
+  $("floor").innerHTML = ROOMS.map(room => {
+    const a = analyze(room);
+    sumRuns += a.todayRuns.length; sumErr += a.todayErr.length;
+    if(a.level === "ok") liveN++;
+    if(a.level === "bad" || a.level === "warn") attn++;
+    const chipCls = {ok:"ok",warn:"warn",bad:"bad"}[a.level] || "off";
+    const lampCls = (a.level === "ok" ? "ok" : a.level === "warn" ? "warn" : a.level === "bad" ? "bad" : "") + (a.live && a.level === "ok" ? " live" : "");
+    const v = (x) => a.have ? x : (data ? "—" : "…");
+    return `<button class="room" type="button" data-wf="${room.wf}" style="--band:${room.band}" aria-label="${esc(room.name)} кабинети, ҳолати: ${esc(a.label)}">
+      <div class="door"></div>
+      <div class="rbody">
+        ${deskSVG(room.band, a.level === "ok" || a.level === "bad")}
+        <div>
+          <div class="rname"><span class="lamp ${lampCls}"></span>${esc(room.name)}</div>
+          <div class="role">${esc(room.role)}</div>
+          <div class="bot">${esc(room.bot)}</div>
+          <span class="chip ${chipCls}">${esc(a.label)}</span>
+        </div>
+      </div>
+      <div class="stats">
+        <div><b>${v(a.capped ? "100+" : a.todayRuns.length)}</b><span>бугун иш</span></div>
+        <div class="${a.todayErr.length ? "bad" : ""}"><b>${v(a.todayErr.length)}</b><span>бугун хато</span></div>
+        <div><b>${a.last ? hhmm(a.last.startedAt) : v("—")}</b><span>${a.last ? esc(ago(a.last.startedAt)) : "охирги иш"}</span></div>
+      </div>
+    </button>`;
+  }).join("");
+  const ok = data && !data.apiErr;
+  $("sRuns").textContent = ok ? sumRuns : "—";
+  $("sErr").textContent = ok ? sumErr : "—";
+  $("sErrTile").classList.toggle("bad", ok && sumErr > 0);
+  $("sLive").textContent = ok ? liveN + " / " + ROOMS.length : "—";
+  $("sIdle").textContent = ok ? attn : "—";
+  renderWatch();
+  if(openWf) renderDrawer(openWf);
+  freshText();
+}
+
+function renderWatch(){
+  const list = $("wList"), chips = $("wChips");
+  if(!data){ chips.innerHTML = ""; list.innerHTML = `<div class="note">${esc(loadErr || "Маълумот юкланмоқда…")}</div>`; return; }
+  const rows = (data.sorovlar || []).slice().sort((a,b) => (Number(b.ts)||0) - (Number(a.ts)||0));
+  const n = h => rows.filter(r => r.holat === h).length;
+  chips.innerHTML = `<span class="chip warn">⏳ Жавобсиз: ${n("ochiq")}</span><span class="chip ok">✅ Жавоб берилди: ${n("javob berildi")}</span><span class="chip bad">⚠️ Шикоят: ${n("shikoyat")}</span>`;
+  if(!rows.length){ list.innerHTML = `<div class="note">Бугун ҳали сўров ёки шикоят топилмади.</div>`; return; }
+  const now = Date.now()/1000;
+  list.innerHTML = rows.map(r => {
+    let chip;
+    if(r.holat === "shikoyat") chip = `<span class="chip bad">Шикоят</span>`;
+    else if(r.holat === "javob berildi") chip = `<span class="chip ok">Жавоб берилди</span>`;
+    else { const d = Math.max(0, Math.round((now - Number(r.ts))/60)); chip = `<span class="chip warn">${d >= 60 ? Math.floor(d/60)+" соат " : ""}${d%60} дақ. кутмоқда</span>`; }
+    const why = r.holat === "javob berildi" && r.izoh ? r.izoh : (r.holat === "ochiq" && Number(r.eslatma_soni) ? "Эслатма юборилди: " + r.eslatma_soni + " марта" : "");
+    return `<div class="req"><div class="t">${esc(r.vaqt || "")}</div>
+      <div><div class="who"><b>${esc(r.kimdan || "?")}</b>${r.kimga ? " → <b>" + esc(r.kimga) + "</b>" : ""}</div>
+      <div class="what">${esc(r.matn || "")}</div>${why ? `<div class="why">${esc(why)}</div>` : ""}</div>${chip}</div>`;
+  }).join("");
+}
+
+function renderDrawer(wf){
+  const room = ROOMS.find(r => r.wf === wf); if(!room) return;
+  const a = analyze(room);
+  $("dhead").style.setProperty("--band", room.band);
+  $("dTitle").textContent = room.name + " кабинети";
+  $("dRole").textContent = room.role + " · " + room.bot;
+  const list = a.runs.slice(0, 15).map(r => {
+    const st = {success:"бажарилди", error:"хато", crashed:"узилди", running:"ишлаяпти", waiting:"кутмоқда", canceled:"бекор", new:"янги"}[r.status] || r.status;
+    return `<li><span>${dmy(r.startedAt)} · ${hhmm(r.startedAt)}</span><span class="st ${esc(r.status)}">${esc(st)}</span></li>`;
+  }).join("");
+  $("dBody").innerHTML = `
+    <div class="kpis">
+      <div class="tile"><b>${a.have ? (a.capped ? "100+" : a.todayRuns.length) : "—"}</b><span>бугун иш</span></div>
+      <div class="tile ${a.todayErr.length ? "bad" : ""}"><b>${a.have ? a.todayErr.length : "—"}</b><span>бугун хато</span></div>
+      <div class="tile"><b>${a.last ? hhmm(a.last.startedAt) : "—"}</b><span>${a.last ? esc(ago(a.last.startedAt)) : "охирги иш"}</span></div>
+    </div>
+    <div><span class="chip ${({ok:"ok",warn:"warn",bad:"bad"})[a.level] || "off"}">${esc(a.label)}</span></div>
+    ${a.lastErr ? `<div class="note">Охирги хато: ${dmy(a.lastErr.startedAt)} ${hhmm(a.lastErr.startedAt)} (${esc(ago(a.lastErr.startedAt))}). Сабабини билиш учун Claude'дан «${esc(room.name)} хатосини текшир» деб сўранг.</div>` : ""}
+    <h3>Охирги ишлар</h3>
+    ${list ? `<ul class="runs">${list}</ul>` : `<div class="note">Ҳали иш йўқ ёки маълумот келмади.</div>`}
+    <a class="link" href="${N8N_URL + room.wf}" target="_blank" rel="noopener">n8n'да очиш →</a>`;
+}
+
+function openDrawer(wf){
+  openWf = wf; renderDrawer(wf);
+  $("drawer").classList.add("show"); $("drawer").setAttribute("aria-hidden","false");
+  $("scrim").classList.add("show"); $("dClose").focus();
+}
+function closeDrawer(){
+  const was = openWf; openWf = null;
+  $("drawer").classList.remove("show"); $("drawer").setAttribute("aria-hidden","true");
+  $("scrim").classList.remove("show");
+  const btn = was && document.querySelector(`.room[data-wf="${was}"]`); if(btn) btn.focus();
+}
+$("floor").addEventListener("click", e => { const b = e.target.closest(".room"); if(b) openDrawer(b.dataset.wf); });
+$("dClose").addEventListener("click", closeDrawer);
+$("scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if(e.key === "Escape" && openWf) closeDrawer(); });
+
+function freshText(){
+  if(loading){ $("fresh").textContent = "Янгиланмоқда…"; return; }
+  if(fetchedAt){ const iso = new Date(fetchedAt).toISOString(); $("fresh").textContent = "Янгиланди: " + hhmm(iso) + " (" + ago(iso) + ")"; }
+  else $("fresh").textContent = loadErr ? "Маълумот келмади" : "Маълумот юкланмоқда…";
+}
+function notice(html){ $("notice").innerHTML = html; $("notice").classList.toggle("show", !!html); }
+
+function showGate(msg){
+  $("gate").classList.remove("hidden"); $("app").classList.add("hidden");
+  $("gateMsg").textContent = msg || "";
+  setTimeout(() => $("kod").focus(), 50);
+}
+function hideGate(){ $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); }
+
+async function load(){
+  const kod = getKod();
+  if(!kod){ showGate(""); return; }
+  if(!navigator.onLine){ loadErr = "Интернет йўқ. Уланганда ўзи янгиланади."; notice(esc(loadErr)); render(); return; }
+  loading = true; freshText();
+  try{
+    const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 30000);
+    const r = await fetch(API + "?kod=" + encodeURIComponent(kod), {cache:"no-store", signal:ctrl.signal});
+    clearTimeout(tm);
+    const text = await r.text();
+    let j = null; try{ j = JSON.parse(text); }catch(e){}
+    if(!r.ok){ throw new Error("n8n " + r.status + " жавоб қайтарди. AI ofis API workflow'и ёқилганини текширинг."); }
+    if(!j || !j.ok){ setKod(""); data = null; loading = false; showGate("Код нотўғри. Қайта киритинг."); return; }
+    data = j; fetchedAt = Date.now(); loadErr = null;
+    notice(j.apiErr ? esc("Ботлар ҳолатини олиб бўлмади: n8n API калити уланмаган ёки эскирган. ") + "<span class=\"small\">(" + esc(j.apiErr).slice(0,140) + ")</span>" : "");
+  }catch(e){
+    loadErr = e.name === "AbortError" ? "n8n жавоб бермади (30 сония). Бироздан кейин «Янгилаш»ни босинг." : (e.message && e.message.startsWith("n8n") ? e.message : "Маълумот олинмади. Интернетни текширинг ва «Янгилаш»ни босинг.");
+    notice(esc(loadErr) + (data ? " Охирги маълумот кўрсатиляпти." : ""));
+  }
+  loading = false; render();
+}
+
+$("gateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("kod").value.trim();
+  if(!v){ $("gateMsg").textContent = "Кодни киритинг."; return; }
+  setKod(v); hideGate(); load();
+});
+$("refresh").addEventListener("click", () => { if(!loading) load(); });
+$("logout").addEventListener("click", () => { setKod(""); data = null; showGate("Кодни қайта киритинг."); });
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && getKod() && Date.now() - fetchedAt > 60000) load(); });
+window.addEventListener("online", () => { if(getKod()) load(); });
+setInterval(() => { if(document.visibilityState === "visible" && getKod() && !loading) load(); }, 5*60000);
+setInterval(() => { freshText(); }, 60000);
+
+render();
+if(getKod()){ hideGate(); load(); } else showGate("");
+
+if("serviceWorker" in navigator){ window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
+</script>
+</body>
+</html>

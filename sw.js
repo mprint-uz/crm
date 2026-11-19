@@ -1,6 +1,6 @@
 // MPRINT CRM — дастур файлларини телефонда сақлаб туради (тез очилиши учун)
-const KESH = 'mprint-crm-v1';
-const FAYLLAR = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
+const KESH = 'mprint-crm-v2';
+const FAYLLAR = ['./', 'index.html', 'ofis.html', 'config.js', 'manifest.webmanifest',
   'icons/logo.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
