@@ -3,458 +3,509 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MPRINT AI офис</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#141832">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MPRINT AI офис">
-<title>MPRINT AI офис</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout: printing-plate floor plan — a 3×3 grid of rooms, each room one AI worker (n8n workflow), CMYK door bands; summary bar on top, cabinet drawer on click. */
+/* Layout: navy app bar (same as MPRINT CRM) → two tabs (Офис / Кузатув).
+   Офис: status card → "attention" list → rooms grouped by department in a tidy tile grid.
+   Tap a tile → cabinet sheet (bottom sheet on phone, side panel on desktop). Single light theme, matching the CRM. */
 :root{
-  --paper:#f3f5f7;
-  --plate:#ffffff;
-  --ink:#16181d;
-  --muted:#5d6470;
-  --line:#dde2e8;
-  --accent:#0093c9;
-  --c:#00a3d9; --m:#d6247a; --y:#f2b705; --k:#2a2d34;
-  --ok:#1f9d55; --warn:#d98a00; --bad:#d63a2f; --off:#9aa1ab;
-  --shadow:0 1px 2px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.06);
-  --display:"Unbounded","Manrope",system-ui,sans-serif;
-  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --navy:#141832;
+  --bg:#F3F5FB;
+  --card:#FFFFFF;
+  --ink:#141832;
+  --muted:#687089;
+  --line:#E4E7F0;
+  --c:#00A8E8; --m:#E6007E; --y:#FFC400; --k:#141832;
+  --ok:#16A34A; --warn:#E08A00; --bad:#E5383B; --off:#A3A9BA;
+  --cmyk:linear-gradient(90deg,#00A8E8,#E6007E,#FFC400);
+  --r:18px;
+  --shadow:0 1px 2px rgba(20,24,50,.05),0 8px 24px rgba(20,24,50,.06);
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --paper:#111418; --plate:#1a1e24; --ink:#eef1f5; --muted:#9aa3b0; --line:#2a3039;
-    --accent:#35b8ea; --k:#c9ced6; --off:#6b7380;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --paper:#111418; --plate:#1a1e24; --ink:#eef1f5; --muted:#9aa3b0; --line:#2a3039;
-  --accent:#35b8ea; --k:#c9ced6; --off:#6b7380;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
-  color-scheme:dark;
-}
 *{box-sizing:border-box}
-html,body{margin:0}
-body{
-  background:var(--paper);
-  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
-  background-size:32px 32px;background-position:-1px -1px;
-  color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
-}
-.wrap{max-width:1120px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:grid;gap:18px}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 .hidden{display:none!important}
-.small{font-size:12px;color:var(--muted)}
-.back{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--accent);text-decoration:none;padding:6px 0}
-.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.gate{min-height:100%;display:grid;place-items:center;padding:24px}
-.gcard{width:min(380px,100%);background:var(--plate);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px;display:grid;gap:14px;border-top:6px solid var(--m)}
-.gcard h1{font-size:20px}
-.gcard label{font-size:13px;color:var(--muted);display:grid;gap:6px}
-.gcard input{font:500 16px var(--body);padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
-.gcard input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
-.gcard .go{font:700 15px var(--body);padding:12px;border-radius:10px;border:0;background:var(--k);color:var(--plate);cursor:pointer}
-.gmsg{font-size:13px;color:var(--bad);min-height:1em}
-html,body{height:100%}
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:12px}
-.reg{width:34px;height:34px;flex:none}
-h1{font-family:var(--display);font-size:24px;line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
-.sub{color:var(--muted);font-size:13px;margin-top:4px}
-.fresh{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.btn{font:600 13px var(--body);border:1px solid var(--line);background:var(--plate);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
-.btn:hover{border-color:var(--accent)}
-.btn:focus-visible,.room:focus-visible,.x:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--c);outline-offset:2px}
 
-.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.tile{background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
-.tile b{display:block;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
-.tile span{font-size:12.5px;color:var(--muted)}
-.tile.bad b{color:var(--bad)}
-@media (max-width:640px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ---------- App bar ---------- */
+.bar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left))}
+.bar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--cmyk)}
+.barin{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;flex:none;animation:spin 9s cubic-bezier(.5,0,.25,1) infinite}
+@keyframes spin{0%,80%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.brand{flex:1;min-width:0}
+.brand b{display:block;font-weight:800;font-size:17px;letter-spacing:.04em;white-space:nowrap}
+.brand b span{background:var(--cmyk);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{display:block;font-size:12px;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:40px;height:40px;border-radius:12px;border:0;background:rgba(255,255,255,.09);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;text-decoration:none}
+.ib:hover{background:rgba(255,255,255,.16)}
+.ib svg{width:20px;height:20px}
+.ib.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
 
-.notice{background:var(--plate);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:10px 14px;font-size:14px;display:none;gap:10px;align-items:center;flex-wrap:wrap}
-.notice.show{display:flex}
+/* ---------- Page ---------- */
+.page{max-width:1080px;margin:0 auto;padding:16px calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:grid;gap:16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card);border-radius:16px;padding:6px;box-shadow:var(--shadow)}
+.tab{border:0;background:transparent;border-radius:12px;padding:11px 10px;font-weight:700;font-size:14.5px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.tab[aria-selected="true"]{background:var(--navy);color:#fff}
+.badge{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--m);color:#fff;font-size:12px;font-weight:800;display:inline-grid;place-items:center}
+.badge.zero{background:var(--line);color:var(--muted)}
+.tab[aria-selected="true"] .badge.zero{background:rgba(255,255,255,.18);color:#fff}
 
-.floor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media (max-width:860px){.floor{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.floor{grid-template-columns:1fr}}
-.room{
-  position:relative;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  background:var(--plate);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
-  padding:0;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;min-height:220px;
-  transition:transform .15s ease,border-color .15s ease;
-}
-.room:hover{transform:translateY(-2px);border-color:var(--accent)}
-.door{height:6px;background:var(--band)}
-.rbody{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:14px 14px 8px;align-items:start}
-.desk{width:72px;height:72px}
-.rname{font-family:var(--display);font-size:15px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:8px}
-.lamp{width:10px;height:10px;border-radius:50%;background:var(--off);flex:none}
-.lamp.ok{background:var(--ok)} .lamp.warn{background:var(--warn)} .lamp.bad{background:var(--bad)}
-.lamp.live{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent);animation:pulse 1.8s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
-@media (prefers-reduced-motion:reduce){.lamp.live{animation:none}.room{transition:none}}
-.role{font-size:13px;color:var(--muted);margin-top:4px}
-.bot{font-size:12px;color:var(--muted);margin-top:2px;word-break:break-all}
-.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;margin-top:8px;border:1px solid currentColor}
-.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.bad{color:var(--bad)} .chip.off{color:var(--off)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px dashed var(--line);margin:0 14px;padding:10px 0 12px;gap:6px}
-.stats div{display:grid}
-.stats b{font-size:17px;font-variant-numeric:tabular-nums}
-.stats span{font-size:11.5px;color:var(--muted)}
-.stats .bad b{color:var(--bad)}
-.rmsg{font-size:12px;color:var(--bad);padding:0 14px 10px}
+.notice{background:#FFF7E6;border:1px solid #FBE3B3;color:#7A4B00;border-radius:14px;padding:11px 14px;font-size:14px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:6px 2px -4px}
+.sec-h h2{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.sec-h span{font-size:12.5px;color:var(--muted)}
 
-/* cabinet drawer */
-.scrim{position:fixed;inset:0;background:rgba(10,14,20,.38);display:none}
-.scrim.show{display:block}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--plate);border-left:1px solid var(--line);
-  box-shadow:-12px 0 30px rgba(0,0,0,.15);transform:translateX(105%);transition:transform .2s ease;display:grid;grid-template-rows:auto 1fr;z-index:5}
-.drawer.show{transform:none}
-@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
-.dhead{padding:16px 18px;border-bottom:1px solid var(--line);display:grid;gap:6px;border-top:6px solid var(--band,var(--accent))}
-.dtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.dhead h2{font-family:var(--display);font-size:18px;margin:0}
-.x{border:0;background:transparent;color:var(--ink);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
-.dbody{overflow:auto;padding:14px 18px 24px;display:grid;gap:14px;align-content:start}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.kpis .tile{padding:10px}
-.kpis .tile b{font-size:19px}
-h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0}
-.runs{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.runs li{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
-.runs li:first-child{border-top:0}
-.st{font-weight:700;font-size:12px}
-.st.success{color:var(--ok)} .st.error,.st.crashed{color:var(--bad)} .st.running,.st.waiting,.st.new{color:var(--accent)}
-.link{color:var(--accent);font-weight:700;text-decoration:none}
-.link:hover{text-decoration:underline}
-.note{font-size:13px;color:var(--muted)}
-footer{font-size:12.5px;color:var(--muted)}
+/* ---------- Status card ---------- */
+.status{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:18px}
+.ring{width:84px;height:84px;position:relative}
+.ring svg{width:84px;height:84px;transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.ring .val small{display:block;font-size:10.5px;color:var(--muted);font-weight:700;margin-top:-4px;text-align:center}
+.ring circle{fill:none;stroke-width:9}
+.ring .bg{stroke:var(--line)}
+.ring .fg{stroke:url(#gr);stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.3,.7,.3,1)}
+.stitle{font-weight:800;font-size:17px;line-height:1.3;text-wrap:balance}
+.ssub{font-size:13px;color:var(--muted);margin-top:3px}
+.kpis{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.kpi{display:grid;gap:1px}
+.kpi b{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi.bad b{color:var(--bad)}
 
-/* group watch */
-.watch{background:var(--plate);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.whead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);border-top:6px solid var(--m)}
-.whead h2{font-family:var(--display);font-size:17px;margin:0 0 4px}
-.wchips{display:flex;gap:8px;flex-wrap:wrap}
-.wlist{display:grid}
-.req{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:start;padding:11px 18px;border-top:1px solid var(--line)}
+/* ---------- Attention ---------- */
+.alerts{display:grid}
+.alert{display:grid;grid-template-columns:4px 1fr auto;gap:12px;align-items:center;padding:12px 14px 12px 0;border:0;background:none;text-align:left;cursor:pointer;color:inherit;border-top:1px solid var(--line);font:inherit}
+.alert:first-child{border-top:0}
+.alert i{display:block;height:100%;min-height:38px;border-radius:0 4px 4px 0}
+.alert i.bad{background:var(--bad)} .alert i.warn{background:var(--warn)}
+.alert b{font-weight:700;font-size:14.5px}
+.alert div span{display:block;font-size:12.5px;color:var(--muted)}
+.chev{color:var(--off);font-size:20px;line-height:1}
+
+/* ---------- Rooms ---------- */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.room{position:relative;border:0;text-align:left;cursor:pointer;color:inherit;font:inherit;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:0;overflow:hidden;display:grid;grid-template-rows:auto auto 1fr;
+  animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i) * 45ms);transition:transform .15s ease,box-shadow .15s ease}
+.room:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(20,24,50,.06),0 14px 30px rgba(20,24,50,.10)}
+.room:active{transform:scale(.98)}
+@keyframes rise{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}}
+.room .band{height:5px;background:var(--band)}
+.room .top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0}
+.bot{width:46px;height:46px}
+.lamp{width:10px;height:10px;border-radius:50%;background:var(--off);flex:none;box-shadow:0 0 0 3px rgba(163,169,186,.18)}
+.lamp.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+.lamp.warn{background:var(--warn);box-shadow:0 0 0 3px rgba(224,138,0,.16)}
+.lamp.bad{background:var(--bad);box-shadow:0 0 0 3px rgba(229,56,59,.16);animation:blinkbad 1.6s ease-in-out infinite}
+.lamp.live{animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.45)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+@keyframes blinkbad{50%{opacity:.45}}
+.room .body{padding:8px 12px 12px;display:grid;gap:2px;align-content:start}
+.room .nm{font-weight:800;font-size:15px;line-height:1.25}
+.room .st{font-size:12px;font-weight:700}
+.st.ok{color:var(--ok)} .st.warn{color:var(--warn)} .st.bad{color:var(--bad)} .st.off,.st.unknown{color:var(--off)}
+.room .meta{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.room .meta b{color:var(--ink);font-size:14px;font-weight:800;margin-right:3px}
+.room .meta .e b{color:var(--bad)}
+
+/* robot */
+.bot .scr{transition:fill .3s}
+.bot.on .scr{animation:glow 2.8s ease-in-out infinite}
+@keyframes glow{50%{opacity:.55}}
+.bot .eye{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.bot.off .eye{animation:none;transform:scaleY(.15)}
+
+/* ---------- Kuzatuv ---------- */
+.wchips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 11px;background:var(--card);box-shadow:var(--shadow)}
+.chip i{width:8px;height:8px;border-radius:50%}
+.req{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px;border-top:1px solid var(--line)}
 .req:first-child{border-top:0}
-.req .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;padding-top:1px}
+.req .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:17px}
+.req .ic.ochiq{background:#FFF4DE} .req .ic.ok{background:#E7F6EC} .req .ic.sh{background:#FDE8E8}
 .req .who{font-size:13px;color:var(--muted)}
-.req .who b{color:var(--ink);font-weight:700}
-.req .what{font-size:14.5px;margin-top:2px}
-.req .why{font-size:12.5px;color:var(--muted);margin-top:3px}
-.req .chip{margin-top:0;white-space:nowrap}
-.wlist > .note{padding:16px 18px}
-@media (max-width:520px){.req{grid-template-columns:1fr auto}.req .t{grid-column:1 / -1}}
+.req .who b{color:var(--ink)}
+.req .what{font-size:15px;font-weight:600;margin-top:2px}
+.req .tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px}
+.tag.ochiq{background:#FFF4DE;color:#8A5300} .tag.ok{background:#E7F6EC;color:#14783A} .tag.sh{background:#FDE8E8;color:#B42324}
+.req .why{font-size:12.5px;color:var(--muted);margin-top:4px}
+.empty{padding:28px 18px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+
+/* ---------- Sheet ---------- */
+.scrim{position:fixed;inset:0;background:rgba(14,17,38,.45);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;z-index:31;background:var(--card);display:grid;grid-template-rows:auto 1fr;transition:transform .25s cubic-bezier(.2,.7,.2,1),visibility 0s linear .25s}
+@media (max-width:719px){.sheet{left:0;right:0;bottom:0;max-height:86%;border-radius:22px 22px 0 0;transform:translateY(105%);padding-bottom:env(safe-area-inset-bottom)}}
+@media (min-width:720px){.sheet{top:0;right:0;height:100%;width:420px;border-radius:22px 0 0 22px;transform:translateX(105%)}}
+.sheet{visibility:hidden}
+.sheet.show{transform:none;visibility:visible;transition:transform .25s cubic-bezier(.2,.7,.2,1),visibility 0s}
+.sh-h{padding:16px 18px 14px;border-bottom:1px solid var(--line);position:relative}
+.sh-h::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--band,var(--cmyk));border-radius:22px 22px 0 0}
+@media (min-width:720px){.sh-h::before{border-radius:22px 0 0 0}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:2px auto 12px}
+@media (min-width:720px){.grab{display:none}}
+.sh-t{display:flex;align-items:center;gap:12px}
+.sh-t h3{margin:0;font-size:18px;font-weight:800;flex:1}
+.x{border:0;background:var(--bg);color:var(--muted);width:36px;height:36px;border-radius:11px;font-size:20px;cursor:pointer}
+.sh-role{font-size:13px;color:var(--muted);margin-top:8px}
+.sh-b{overflow:auto;padding:16px 18px 24px;display:grid;gap:14px;align-content:start}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini div{background:var(--bg);border-radius:12px;padding:10px}
+.mini b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.mini span{font-size:11.5px;color:var(--muted)}
+.mini .bad b{color:var(--bad)}
+.h4{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 -4px}
+.runs{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.runs li{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
+.runs li:first-child{border-top:0}
+.runs .s{font-weight:700;font-size:12.5px}
+.s.success{color:var(--ok)} .s.error,.s.crashed{color:var(--bad)} .s.running,.s.waiting,.s.new{color:var(--c)}
+.hint{font-size:13px;color:var(--muted);background:var(--bg);border-radius:12px;padding:10px 12px}
+.lnk{display:inline-flex;gap:6px;align-items:center;color:var(--c);font-weight:700;text-decoration:none;font-size:14px}
+.foot{font-size:12px;color:var(--muted);text-align:center}
+
+/* ---------- Gate ---------- */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(520px 380px at 15% 10%,rgba(0,168,232,.20),transparent 60%),radial-gradient(520px 380px at 90% 95%,rgba(230,0,126,.18),transparent 60%),var(--navy)}
+.gcard{width:min(360px,100%);background:var(--card);border-radius:22px;padding:26px 22px;display:grid;gap:14px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.gcard .logo{width:64px;height:64px;margin:0 auto}
+.gcard h1{margin:0;font-size:20px;font-weight:800}
+.gcard p{margin:0;font-size:13.5px;color:var(--muted)}
+.gcard input{font:600 17px var(--font);text-align:center;letter-spacing:.12em;padding:13px;border-radius:13px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.go{font:800 15px var(--font);padding:13px;border-radius:13px;border:0;color:#fff;cursor:pointer;background:linear-gradient(135deg,#00A8E8,#7C5CFF 52%,#E6007E)}
+.gmsg{font-size:13px;color:var(--bad);min-height:1em}
+.gback{font-size:13.5px;color:var(--muted);text-decoration:none;font-weight:600}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<section class="gate hidden" id="gate" aria-labelledby="gTitle">
+
+<!-- Кириш -->
+<section class="gate hidden" id="gate">
   <form class="gcard" id="gateForm" autocomplete="off">
-    <svg class="reg" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="10" fill="none" stroke="var(--k)" stroke-width="2"/><circle cx="17" cy="17" r="4" fill="var(--m)"/><path d="M17 1v32M1 17h32" stroke="var(--k)" stroke-width="2"/></svg>
-    <h1 id="gTitle">MPRINT AI офис</h1>
-    <div class="note">Бу бўлим фақат раҳбар учун. Кириш кодини бир марта киритинг, кейин телефон эслаб қолади.</div>
-    <label for="kod">Кириш коди<input id="kod" name="kod" type="password" inputmode="text" autocapitalize="off" spellcheck="false"></label>
+    <img class="logo" src="icons/logo.svg" alt="">
+    <h1>MPRINT AI офис</h1>
+    <p>Бу бўлим раҳбар учун. Кириш кодини бир марта киритинг, кейин эслаб қолади.</p>
+    <label for="kod" class="hidden">Кириш коди</label>
+    <input id="kod" type="password" placeholder="Кириш коди" autocapitalize="off" spellcheck="false">
     <div class="gmsg" id="gateMsg" role="alert"></div>
     <button class="go" type="submit">Кириш</button>
-    <a class="back" href="./">← CRM'га қайтиш</a>
+    <a class="gback" href="./">← CRM'га қайтиш</a>
   </form>
 </section>
-<div class="wrap" id="app">
-  <header>
-    <div class="brand">
-      <svg class="reg" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="10" fill="none" stroke="var(--k)" stroke-width="2"/><circle cx="17" cy="17" r="4" fill="var(--m)"/><path d="M17 1v32M1 17h32" stroke="var(--k)" stroke-width="2"/></svg>
-      <div>
-        <h1>MPRINT AI офиси</h1>
-        <div class="sub">Ҳар бир хона битта AI ходим (n8n'даги бот). Бугунги иш ва ҳолати жонли кўринади.</div>
-      </div>
+
+<div id="app" class="hidden">
+  <header class="bar">
+    <div class="barin">
+      <a class="ib" href="./" aria-label="CRM'га қайтиш"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      <img class="logo" src="icons/logo.svg" alt="">
+      <div class="brand"><b>MPRINT <span>AI офис</span></b><small id="fresh">Юкланмоқда…</small></div>
+      <button class="ib" id="refresh" type="button" aria-label="Янгилаш"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
     </div>
-    <div class="actions"><a class="back" href="./">← CRM</a><span id="fresh">Маълумот юкланмоқда…</span><button class="btn" id="refresh" type="button">Янгилаш</button><button class="back" id="logout" type="button" style="border:0;background:none;cursor:pointer;color:var(--muted)">Чиқиш</button></div>
   </header>
 
-  <section class="summary" aria-label="Умумий">
-    <div class="tile"><b id="sRuns">—</b><span>Бугун бажарилган ишлар</span></div>
-    <div class="tile" id="sErrTile"><b id="sErr">—</b><span>Бугунги хатолар</span></div>
-    <div class="tile"><b id="sLive">—</b><span>Ишлаётган ходимлар</span></div>
-    <div class="tile"><b id="sIdle">—</b><span>Эътибор керак</span></div>
-  </section>
-
-  <div class="notice" id="notice" role="status"></div>
-
-  <main class="floor" id="floor" aria-label="Ходимлар хоналари"></main>
-
-  <section class="watch" aria-labelledby="wTitle">
-    <div class="whead">
-      <div>
-        <h2 id="wTitle">Гуруҳ кузатуви · бугун</h2>
-        <div class="note">Гуруҳ ёзишмаларидан AI топган сўровлар ва шикоятлар. Ҳар 30 дақиқада янгиланади.</div>
-      </div>
-      <div class="wchips" id="wChips"></div>
+  <main class="page">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tOfis" aria-selected="true" aria-controls="vOfis">Офис</button>
+      <button class="tab" role="tab" id="tKuz" aria-selected="false" aria-controls="vKuz">Кузатув <span class="badge zero" id="kBadge">0</span></button>
     </div>
-    <div class="wlist" id="wList"><div class="note">Маълумот юкланмоқда…</div></div>
-  </section>
 
-  <footer>Ҳолат: 🟢 ишлаяпти · 🟡 узоқ вақт жим · 🔴 хато бор · ⚪ ўчирилган. Маълумот n8n'дан ҳар 5 дақиқада ва «Янгилаш» босилганда янгиланади.</footer>
+    <div class="notice hidden" id="notice" role="status"></div>
+
+    <!-- ОФИС -->
+    <section id="vOfis" role="tabpanel" aria-labelledby="tOfis" style="display:grid;gap:16px">
+      <div class="card status">
+        <div class="ring" aria-hidden="true">
+          <svg viewBox="0 0 84 84"><defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#00A8E8"/><stop offset=".5" stop-color="#E6007E"/><stop offset="1" stop-color="#FFC400"/></linearGradient></defs>
+            <circle class="bg" cx="42" cy="42" r="36"/><circle class="fg" id="ringFg" cx="42" cy="42" r="36" stroke-dasharray="226.2" stroke-dashoffset="226.2"/></svg>
+          <div class="val"><div><span id="ringVal">—</span><small>фаол</small></div></div>
+        </div>
+        <div><div class="stitle" id="sTitle">Маълумот юкланмоқда…</div><div class="ssub" id="sSub">Ботлар ҳолати n8n'дан олинмоқда</div></div>
+        <div class="kpis">
+          <div class="kpi"><b id="kRuns">—</b><span>бугунги ишлар</span></div>
+          <div class="kpi" id="kErrBox"><b id="kErr">—</b><span>бугунги хато</span></div>
+          <div class="kpi"><b id="kOpen">—</b><span>жавобсиз сўров</span></div>
+        </div>
+      </div>
+
+      <div id="attnWrap" class="hidden" style="display:grid;gap:10px">
+        <div class="sec-h"><h2>Эътибор керак</h2></div>
+        <div class="card alerts" id="attn"></div>
+      </div>
+
+      <div id="groups" style="display:grid;gap:16px"></div>
+    </section>
+
+    <!-- КУЗАТУВ -->
+    <section id="vKuz" role="tabpanel" aria-labelledby="tKuz" class="hidden" style="gap:12px">
+      <div class="sec-h"><h2>Гуруҳ кузатуви · бугун</h2><span>ҳар 30 дақиқада</span></div>
+      <div class="wchips" id="wChips"></div>
+      <div class="card" id="wList"><div class="empty">Юкланмоқда…</div></div>
+    </section>
+
+    <div class="foot">Маълумот ҳар 5 дақиқада ва ↻ босилганда янгиланади · <button id="logout" type="button" style="border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer;font:inherit">Чиқиш</button></div>
+  </main>
 </div>
 
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="dTitle">
-  <div class="dhead" id="dhead">
-    <div class="dtop"><h2 id="dTitle">Кабинет</h2><button class="x" id="dClose" type="button" aria-label="Ёпиш">×</button></div>
-    <div class="note" id="dRole"></div>
+<aside class="sheet" id="sheet" aria-hidden="true" aria-labelledby="shT" role="dialog">
+  <div class="sh-h" id="shH"><div class="grab"></div>
+    <div class="sh-t"><span id="shBot"></span><h3 id="shT">Кабинет</h3><button class="x" id="shX" type="button" aria-label="Ёпиш">×</button></div>
+    <div class="sh-role" id="shRole"></div>
   </div>
-  <div class="dbody" id="dBody"></div>
+  <div class="sh-b" id="shB"></div>
 </aside>
 
 <script>
 const API = "https://mprintaccount.app.n8n.cloud/webhook/mprint-ai-ofis";
 const N8N_URL = "https://mprintaccount.app.n8n.cloud/workflow/";
-const ROOMS = [
-  {wf:"5c9gOjyDVWVWU50z", name:"Директор", band:"var(--c)", bot:"@Mprint_asosiy_bot", kind:"event", idleH:72,
-   role:"Вазифа беради, «Бажардим» ва берувчи тасдиғини юритади."},
-  {wf:"YYHp3ZZWgRGFPs03", name:"Режачи", band:"var(--m)", bot:"@Mprint_asosiy_bot", kind:"schedule", idleH:42,
-   role:"09:00 кунлик режа, 10–16 соатлик эслатма, 17:00 кун якуни ҳисоботи."},
-  {wf:"SZfRFEsIZcHkAv2X", name:"Нархчи", band:"var(--y)", bot:"@MPRINT_NARX_XISOBLOVCHI_BOT", kind:"event", idleH:48,
-   role:"Типография буюртмаси нархини ҳисоблайди."},
-  {wf:"2xOuLQ94T5eZHGOG", name:"Ёрдамчи", band:"var(--k)", bot:"MPRINT Ёрдамчи", kind:"event", idleH:48,
-   role:"Гуруҳда 3 дақиқада жавоб берилмаса, ўзи жавоб беради. Гуруҳ хабарларини йиғади."},
-  {wf:"ylc5BeotLuoQiD5f", name:"CRM менежер", band:"var(--c)", bot:"@Mprint_CRM_bot", kind:"event", idleH:48,
-   role:"Менежерлар мижоз, дизайн ва нарх сўровини киритади."},
-  {wf:"lkKByYxQUQNT1OPJ", name:"CRM назоратчи", band:"var(--m)", bot:"@Mprint_CRM_bot", kind:"schedule", idleH:42,
-   role:"09:00 мижоз эслатмаси, соатлик нарх эслатмаси, 18:00 раҳбарга ҳисобот."},
-  {wf:"3cYNMuKJrOiEHg4l", name:"Ҳисобчи", band:"var(--y)", bot:"@mprint_hisobot_bot", kind:"schedule", idleH:26,
-   role:"Кунлик буюртмаларни жамлаб, БУХГАЛТЕР гуруҳига ҳисобот юборади."},
-  {wf:"F72c93jtouxusOMO", name:"Уйғотувчи", band:"var(--k)", bot:"Шерикка", kind:"schedule", idleH:26,
-   role:"Ҳар куни 09:00 да овозли «Жаноб, туринг» юборади."},
-  {wf:"kWfFpaYiaYKLANAu", name:"Кузатувчи", band:"var(--m)", bot:"Гуруҳ ёзишмалари", kind:"schedule", idleH:42,
-   role:"Гуруҳдаги сўров, жавоб ва шикоятларни топади, жавобсизларга эслатади."},
-  {wf:"UEMpL8xjMQvVKuEv", name:"Давоматчи", band:"var(--c)", bot:"Employee Attendance Bot", kind:"event", idleH:48,
-   role:"Ходимлар келди-кетди ва ойлик ҳисоби."}
+const CAP = 60; // AI ofis API ҳар бот учун охирги 60 та ишни беради
+const GROUPS = [
+  {name:"Жамоа бошқаруви", rooms:[
+    {wf:"5c9gOjyDVWVWU50z", name:"Директор", band:"var(--c)", bot:"@Mprint_asosiy_bot", kind:"event", idleH:72, role:"Вазифа беради, «Бажардим» ва берувчи тасдиғини юритади."},
+    {wf:"YYHp3ZZWgRGFPs03", name:"Режачи", band:"var(--m)", bot:"@Mprint_asosiy_bot", kind:"schedule", idleH:42, role:"09:00 кунлик режа, 10–16 соатлик эслатма, 17:00 кун якуни ҳисоботи."},
+    {wf:"kWfFpaYiaYKLANAu", name:"Кузатувчи", band:"var(--y)", bot:"Гуруҳ ёзишмалари", kind:"schedule", idleH:42, role:"Гуруҳдаги сўров, жавоб ва шикоятларни топади, жавобсизларга эслатади."}
+  ]},
+  {name:"Сотув ва мижозлар", rooms:[
+    {wf:"SZfRFEsIZcHkAv2X", name:"Нархчи", band:"var(--y)", bot:"@MPRINT_NARX_XISOBLOVCHI_BOT", kind:"event", idleH:48, role:"Типография буюртмаси нархини ҳисоблайди."},
+    {wf:"2xOuLQ94T5eZHGOG", name:"Ёрдамчи", band:"var(--k)", bot:"MPRINT Ёрдамчи", kind:"event", idleH:48, role:"Гуруҳда 3 дақиқада жавоб берилмаса ўзи жавоб беради, гуруҳ хабарларини йиғади."},
+    {wf:"ylc5BeotLuoQiD5f", name:"CRM менежер", band:"var(--c)", bot:"@Mprint_CRM_bot", kind:"event", idleH:48, role:"Менежерлар мижоз, дизайн ва нарх сўровини киритади."},
+    {wf:"lkKByYxQUQNT1OPJ", name:"CRM назоратчи", band:"var(--m)", bot:"@Mprint_CRM_bot", kind:"schedule", idleH:42, role:"09:00 мижоз эслатмаси, соатлик нарх эслатмаси, 18:00 раҳбарга ҳисобот."}
+  ]},
+  {name:"Ҳисобот ва бошқалар", rooms:[
+    {wf:"3cYNMuKJrOiEHg4l", name:"Ҳисобчи", band:"var(--y)", bot:"@mprint_hisobot_bot", kind:"schedule", idleH:26, role:"Кунлик буюртмаларни жамлаб, БУХГАЛТЕР гуруҳига ҳисобот юборади."},
+    {wf:"F72c93jtouxusOMO", name:"Уйғотувчи", band:"var(--k)", bot:"Ҳар куни 09:00", kind:"schedule", idleH:26, role:"Ҳар куни 09:00 да овозли «Хайрли тонг» юборади."},
+    {wf:"UEMpL8xjMQvVKuEv", name:"Давоматчи", band:"var(--c)", bot:"Employee Attendance Bot", kind:"event", idleH:48, role:"Ходимлар келди-кетди ва ойлик ҳисоби."}
+  ]}
 ];
+const ROOMS = GROUPS.flatMap(g => g.rooms);
 
-let data = null;         // last good payload
-let loadErr = null;      // text of last failure
-let fetchedAt = 0;       // when the last good payload arrived (ms)
-let openWf = null;
-let loading = false;
-
+let data = null, loadErr = null, fetchedAt = 0, loading = false, openWf = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const TZ = 5*3600*1000;
-function tashkentDayStart(ms){ const t = ms + TZ; return t - (t % 86400000) - TZ; }
-function hhmm(iso){ const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0"); }
-function dmy(iso){ const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0"); }
+const dayStart = ms => { const t = ms + TZ; return t - (t % 86400000) - TZ; };
+const hhmm = iso => { const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0"); };
+const dmy = iso => { const d = new Date(Date.parse(iso)+TZ); return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0"); };
 function ago(iso){
   if(!iso) return "—";
   const m = Math.round((Date.now()-Date.parse(iso))/60000);
-  if(m < 2) return "ҳозиргина";
-  if(m < 60) return m+" дақ. олдин";
+  if(m < 2) return "ҳозиргина"; if(m < 60) return m+" дақ. олдин";
   const h = Math.round(m/60); if(h < 24) return h+" соат олдин";
   return Math.round(h/24)+" кун олдин";
 }
-function getKod(){ try{ return localStorage.getItem("ai_ofis_kod") || ""; }catch(e){ return ""; } }
-function setKod(v){ try{ if(v) localStorage.setItem("ai_ofis_kod", v); else localStorage.removeItem("ai_ofis_kod"); }catch(e){} }
+const getKod = () => { try{ return localStorage.getItem("ai_ofis_kod") || ""; }catch(e){ return ""; } };
+const setKod = v => { try{ v ? localStorage.setItem("ai_ofis_kod", v) : localStorage.removeItem("ai_ofis_kod"); }catch(e){} };
 
-function deskSVG(band, lit){
-  return `<svg class="desk" viewBox="0 0 72 72" aria-hidden="true">
-    <rect x="4" y="44" width="64" height="8" rx="2" fill="var(--line)"/>
-    <rect x="10" y="52" width="4" height="14" fill="var(--line)"/><rect x="58" y="52" width="4" height="14" fill="var(--line)"/>
-    <rect x="38" y="24" width="26" height="18" rx="2" fill="var(--k)"/>
-    <rect x="40" y="26" width="22" height="14" rx="1" fill="${lit ? band : "var(--off)"}" opacity="${lit ? .85 : .4}"/>
-    <rect x="49" y="42" width="4" height="3" fill="var(--k)"/>
-    <circle cx="20" cy="22" r="10" fill="var(--plate)" stroke="var(--k)" stroke-width="2"/>
-    <circle cx="16.5" cy="21" r="1.8" fill="var(--k)"/><circle cx="23.5" cy="21" r="1.8" fill="var(--k)"/>
-    <path d="M16 26q4 3 8 0" stroke="var(--k)" stroke-width="1.6" fill="none"/>
-    <path d="M20 12v-5" stroke="var(--k)" stroke-width="2"/><circle cx="20" cy="6" r="2.4" fill="${band}"/>
-    <rect x="11" y="32" width="18" height="12" rx="4" fill="${band}"/>
+function robot(band, mode){ // mode: on | idle | off
+  const scr = mode === "off" ? "var(--off)" : band;
+  return `<svg class="bot ${mode}" viewBox="0 0 46 46" aria-hidden="true">
+    <rect x="3" y="31" width="40" height="5" rx="2.5" fill="#E9ECF4"/>
+    <rect x="25" y="15" width="17" height="13" rx="2.5" fill="#141832"/>
+    <rect class="scr" x="27" y="17" width="13" height="9" rx="1.2" fill="${scr}" opacity="${mode === "off" ? .35 : .9}"/>
+    <rect x="31.5" y="28" width="4" height="3" fill="#141832"/>
+    <path d="M12 7V3.5" stroke="#141832" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="3" r="2" fill="${band}"/>
+    <rect x="4" y="7" width="16" height="13" rx="5" fill="#fff" stroke="#141832" stroke-width="1.8"/>
+    <rect class="eye" x="8.2" y="11.5" width="2.4" height="3.4" rx="1.2" fill="#141832"/><rect class="eye" x="13.4" y="11.5" width="2.4" height="3.4" rx="1.2" fill="#141832"/>
+    <rect x="6" y="21" width="12" height="10" rx="3.5" fill="${band}"/>
   </svg>`;
 }
 
 function analyze(room){
   const runs = (data && data.runs && data.runs[room.wf]) ? data.runs[room.wf].map(r => ({status:r.s, startedAt:r.t})) : [];
   const have = !!data && !data.apiErr;
-  const today0 = tashkentDayStart(Date.now());
-  const todayRuns = runs.filter(r => Date.parse(r.startedAt) >= today0);
   const isErr = r => r.status === "error" || r.status === "crashed";
-  const todayErr = todayRuns.filter(isErr);
-  const last = runs[0];
-  const lastErr = runs.find(isErr);
+  const t0 = dayStart(Date.now());
+  const today = runs.filter(r => Date.parse(r.startedAt) >= t0);
+  const todayErr = today.filter(isErr);
+  const last = runs[0], lastErr = runs.find(isErr);
   const active = data && data.active ? data.active[room.wf] : undefined;
-  let level = "unknown", label = data ? "Маълумот йўқ" : "Юкланмоқда";
+  let level = "unknown", label = data ? "Маълумот йўқ" : "Юкланмоқда", reason = "";
   if(active === false){ level = "off"; label = "Ўчирилган"; }
   else if(have){
     const hours = last ? (Date.now()-Date.parse(last.startedAt))/3600000 : Infinity;
-    if(last && isErr(last)){ level = "bad"; label = "Охирги иш хато"; }
-    else if(todayErr.length){ level = "bad"; label = "Бугун хато бўлган"; }
-    else if(hours > room.idleH){ level = "warn"; label = room.kind === "event" ? "Ишлатилмаяпти" : "Ишга тушмаяпти"; }
+    if(last && isErr(last)){ level = "bad"; label = "Охирги иш хато"; reason = "Охирги иши хато билан тугаган · " + ago(last.startedAt); }
+    else if(todayErr.length){ level = "bad"; label = "Бугун хато бўлган"; reason = "Бугун " + todayErr.length + " марта хато берган"; }
+    else if(hours > room.idleH){ level = "warn"; label = room.kind === "event" ? "Ишлатилмаяпти" : "Ишга тушмаяпти";
+      reason = last ? "Охирги иши " + ago(last.startedAt) : "Ҳали бирор марта ишламаган"; }
     else { level = "ok"; label = "Ишлаяпти"; }
   }
-  const live = last && (Date.now()-Date.parse(last.startedAt)) < 5*60000;
-  const capped = runs.length >= 100 && todayRuns.length === runs.length;
-  return {runs, have, todayRuns, todayErr, last, lastErr, active, level, label, live, capped};
+  const live = !!last && (Date.now()-Date.parse(last.startedAt)) < 5*60000;
+  const capped = runs.length >= CAP && today.length === runs.length;
+  return {runs, have, today, todayErr, last, lastErr, level, label, reason, live, capped};
 }
 
 function render(){
-  let sumRuns = 0, sumErr = 0, liveN = 0, attn = 0;
-  $("floor").innerHTML = ROOMS.map(room => {
-    const a = analyze(room);
-    sumRuns += a.todayRuns.length; sumErr += a.todayErr.length;
-    if(a.level === "ok") liveN++;
-    if(a.level === "bad" || a.level === "warn") attn++;
-    const chipCls = {ok:"ok",warn:"warn",bad:"bad"}[a.level] || "off";
-    const lampCls = (a.level === "ok" ? "ok" : a.level === "warn" ? "warn" : a.level === "bad" ? "bad" : "") + (a.live && a.level === "ok" ? " live" : "");
-    const v = (x) => a.have ? x : (data ? "—" : "…");
-    return `<button class="room" type="button" data-wf="${room.wf}" style="--band:${room.band}" aria-label="${esc(room.name)} кабинети, ҳолати: ${esc(a.label)}">
-      <div class="door"></div>
-      <div class="rbody">
-        ${deskSVG(room.band, a.level === "ok" || a.level === "bad")}
-        <div>
-          <div class="rname"><span class="lamp ${lampCls}"></span>${esc(room.name)}</div>
-          <div class="role">${esc(room.role)}</div>
-          <div class="bot">${esc(room.bot)}</div>
-          <span class="chip ${chipCls}">${esc(a.label)}</span>
-        </div>
-      </div>
-      <div class="stats">
-        <div><b>${v(a.capped ? "100+" : a.todayRuns.length)}</b><span>бугун иш</span></div>
-        <div class="${a.todayErr.length ? "bad" : ""}"><b>${v(a.todayErr.length)}</b><span>бугун хато</span></div>
-        <div><b>${a.last ? hhmm(a.last.startedAt) : v("—")}</b><span>${a.last ? esc(ago(a.last.startedAt)) : "охирги иш"}</span></div>
-      </div>
-    </button>`;
-  }).join("");
   const ok = data && !data.apiErr;
-  $("sRuns").textContent = ok ? sumRuns : "—";
-  $("sErr").textContent = ok ? sumErr : "—";
-  $("sErrTile").classList.toggle("bad", ok && sumErr > 0);
-  $("sLive").textContent = ok ? liveN + " / " + ROOMS.length : "—";
-  $("sIdle").textContent = ok ? attn : "—";
+  let sumRuns = 0, sumErr = 0, liveN = 0, countable = 0;
+  const attn = [];
+  $("groups").innerHTML = GROUPS.map((g, gi) => {
+    const tiles = g.rooms.map((room, ri) => {
+      const a = analyze(room);
+      sumRuns += a.today.length; sumErr += a.todayErr.length;
+      if(a.level !== "off") countable++;
+      if(a.level === "ok") liveN++;
+      if(a.level === "bad" || a.level === "warn") attn.push({room, a});
+      const lamp = a.level === "ok" ? "ok" + (a.live ? " live" : "") : (["warn","bad"].includes(a.level) ? a.level : "");
+      const mode = a.level === "off" ? "off" : (a.level === "ok" || a.level === "bad" ? "on" : "idle");
+      const v = x => ok ? x : (data ? "—" : "…");
+      return `<button class="room" type="button" data-wf="${room.wf}" style="--band:${room.band};--i:${gi*4+ri}" aria-label="${esc(room.name)}: ${esc(a.label)}">
+        <div class="band"></div>
+        <div class="top">${robot(room.band, mode)}<span class="lamp ${lamp}"></span></div>
+        <div class="body">
+          <div class="nm">${esc(room.name)}</div>
+          <div class="st ${a.level}">${esc(a.label)}</div>
+          <div class="meta"><span><b>${v(a.capped ? CAP + "+" : a.today.length)}</b>иш</span>${a.todayErr.length ? `<span class="e"><b>${a.todayErr.length}</b>хато</span>` : ""}<span>${a.last ? (Date.parse(a.last.startedAt) >= dayStart(Date.now()) ? hhmm(a.last.startedAt) : ago(a.last.startedAt)) : ""}</span></div>
+        </div>
+      </button>`;
+    }).join("");
+    return `<div style="display:grid;gap:10px"><div class="sec-h"><h2>${esc(g.name)}</h2><span>${g.rooms.length} та</span></div><div class="grid">${tiles}</div></div>`;
+  }).join("");
+
+  // status card
+  const pct = ok && countable ? liveN / countable : 0;
+  $("ringFg").style.strokeDashoffset = String(226.2 * (1 - pct));
+  $("ringVal").textContent = ok ? liveN + "/" + countable : "—";
+  if(!data){ $("sTitle").textContent = loadErr ? "Маълумот келмади" : "Маълумот юкланмоқда…"; $("sSub").textContent = loadErr || "Ботлар ҳолати n8n'дан олинмоқда"; }
+  else if(data.apiErr){ $("sTitle").textContent = "Ботлар ҳолатини олиб бўлмади"; $("sSub").textContent = "n8n API калитини текширинг"; }
+  else if(!attn.length){ $("sTitle").textContent = "Ҳамма ботлар жойида 👌"; $("sSub").textContent = "Хато ёки жим қолган бот йўқ"; }
+  else { const b = attn.filter(x => x.a.level === "bad").length; $("sTitle").textContent = attn.length + " та бот эътибор талаб қилади"; $("sSub").textContent = (b ? b + " тасида хато, " : "") + "қолганлари ишлаяпти"; }
+  $("kRuns").textContent = ok ? sumRuns : "—";
+  $("kErr").textContent = ok ? sumErr : "—";
+  $("kErrBox").classList.toggle("bad", ok && sumErr > 0);
+  const open = data ? (data.sorovlar || []).filter(r => r.holat === "ochiq").length : 0;
+  $("kOpen").textContent = data ? open : "—";
+  $("kBadge").textContent = open; $("kBadge").classList.toggle("zero", !open);
+
+  // attention
+  attn.sort((x, y) => (x.a.level === "bad" ? 0 : 1) - (y.a.level === "bad" ? 0 : 1));
+  $("attnWrap").classList.toggle("hidden", !attn.length);
+  $("attn").innerHTML = attn.map(({room, a}) => `<button class="alert" type="button" data-wf="${room.wf}"><i class="${a.level}"></i><div><b>${esc(room.name)}</b><span>${esc(a.reason || a.label)}</span></div><span class="chev">›</span></button>`).join("");
+
   renderWatch();
-  if(openWf) renderDrawer(openWf);
+  if(openWf) renderSheet(openWf);
   freshText();
 }
 
 function renderWatch(){
-  const list = $("wList"), chips = $("wChips");
-  if(!data){ chips.innerHTML = ""; list.innerHTML = `<div class="note">${esc(loadErr || "Маълумот юкланмоқда…")}</div>`; return; }
+  if(!data){ $("wChips").innerHTML = ""; $("wList").innerHTML = `<div class="empty">${esc(loadErr || "Юкланмоқда…")}</div>`; return; }
   const rows = (data.sorovlar || []).slice().sort((a,b) => (Number(b.ts)||0) - (Number(a.ts)||0));
   const n = h => rows.filter(r => r.holat === h).length;
-  chips.innerHTML = `<span class="chip warn">⏳ Жавобсиз: ${n("ochiq")}</span><span class="chip ok">✅ Жавоб берилди: ${n("javob berildi")}</span><span class="chip bad">⚠️ Шикоят: ${n("shikoyat")}</span>`;
-  if(!rows.length){ list.innerHTML = `<div class="note">Бугун ҳали сўров ёки шикоят топилмади.</div>`; return; }
+  $("wChips").innerHTML = `<span class="chip"><i style="background:var(--warn)"></i>Жавобсиз ${n("ochiq")}</span><span class="chip"><i style="background:var(--ok)"></i>Жавоб берилди ${n("javob berildi")}</span><span class="chip"><i style="background:var(--bad)"></i>Шикоят ${n("shikoyat")}</span>`;
+  if(!rows.length){ $("wList").innerHTML = `<div class="empty"><b>Бугун ҳали сўров йўқ</b>Гуруҳда кимдир бировдан иш сўраса, шу ерда пайдо бўлади.</div>`; return; }
   const now = Date.now()/1000;
-  list.innerHTML = rows.map(r => {
-    let chip;
-    if(r.holat === "shikoyat") chip = `<span class="chip bad">Шикоят</span>`;
-    else if(r.holat === "javob berildi") chip = `<span class="chip ok">Жавоб берилди</span>`;
-    else { const d = Math.max(0, Math.round((now - Number(r.ts))/60)); chip = `<span class="chip warn">${d >= 60 ? Math.floor(d/60)+" соат " : ""}${d%60} дақ. кутмоқда</span>`; }
+  $("wList").innerHTML = rows.map(r => {
+    let ic, tag;
+    if(r.holat === "shikoyat"){ ic = `<div class="ic sh">⚠️</div>`; tag = `<span class="tag sh">Шикоят</span>`; }
+    else if(r.holat === "javob berildi"){ ic = `<div class="ic ok">✅</div>`; tag = `<span class="tag ok">Жавоб берилди</span>`; }
+    else { const d = Math.max(0, Math.round((now - Number(r.ts))/60)); ic = `<div class="ic ochiq">⏳</div>`; tag = `<span class="tag ochiq">${d >= 60 ? Math.floor(d/60)+" соат " : ""}${d%60} дақ. кутмоқда</span>`; }
     const why = r.holat === "javob berildi" && r.izoh ? r.izoh : (r.holat === "ochiq" && Number(r.eslatma_soni) ? "Эслатма юборилди: " + r.eslatma_soni + " марта" : "");
-    return `<div class="req"><div class="t">${esc(r.vaqt || "")}</div>
-      <div><div class="who"><b>${esc(r.kimdan || "?")}</b>${r.kimga ? " → <b>" + esc(r.kimga) + "</b>" : ""}</div>
-      <div class="what">${esc(r.matn || "")}</div>${why ? `<div class="why">${esc(why)}</div>` : ""}</div>${chip}</div>`;
+    return `<div class="req">${ic}<div><div class="who">${esc(r.vaqt || "")} · <b>${esc(r.kimdan || "?")}</b>${r.kimga ? " → <b>" + esc(r.kimga) + "</b>" : ""}</div>
+      <div class="what">${esc(r.matn || "")}</div>${tag}${why ? `<div class="why">${esc(why)}</div>` : ""}</div></div>`;
   }).join("");
 }
 
-function renderDrawer(wf){
+function renderSheet(wf){
   const room = ROOMS.find(r => r.wf === wf); if(!room) return;
   const a = analyze(room);
-  $("dhead").style.setProperty("--band", room.band);
-  $("dTitle").textContent = room.name + " кабинети";
-  $("dRole").textContent = room.role + " · " + room.bot;
+  $("shH").style.setProperty("--band", room.band);
+  $("shBot").innerHTML = robot(room.band, a.level === "off" ? "off" : "on");
+  $("shT").textContent = room.name;
+  $("shRole").textContent = room.role + " · " + room.bot;
   const list = a.runs.slice(0, 15).map(r => {
     const st = {success:"бажарилди", error:"хато", crashed:"узилди", running:"ишлаяпти", waiting:"кутмоқда", canceled:"бекор", new:"янги"}[r.status] || r.status;
-    return `<li><span>${dmy(r.startedAt)} · ${hhmm(r.startedAt)}</span><span class="st ${esc(r.status)}">${esc(st)}</span></li>`;
+    return `<li><span>${dmy(r.startedAt)} · ${hhmm(r.startedAt)}</span><span class="s ${esc(r.status)}">${esc(st)}</span></li>`;
   }).join("");
-  $("dBody").innerHTML = `
-    <div class="kpis">
-      <div class="tile"><b>${a.have ? (a.capped ? "100+" : a.todayRuns.length) : "—"}</b><span>бугун иш</span></div>
-      <div class="tile ${a.todayErr.length ? "bad" : ""}"><b>${a.have ? a.todayErr.length : "—"}</b><span>бугун хато</span></div>
-      <div class="tile"><b>${a.last ? hhmm(a.last.startedAt) : "—"}</b><span>${a.last ? esc(ago(a.last.startedAt)) : "охирги иш"}</span></div>
+  $("shB").innerHTML = `
+    <div><span class="st ${a.level}" style="font-size:13.5px">● ${esc(a.label)}</span></div>
+    <div class="mini">
+      <div><b>${a.have ? (a.capped ? CAP + "+" : a.today.length) : "—"}</b><span>бугун иш</span></div>
+      <div class="${a.todayErr.length ? "bad" : ""}"><b>${a.have ? a.todayErr.length : "—"}</b><span>бугун хато</span></div>
+      <div><b>${a.last ? hhmm(a.last.startedAt) : "—"}</b><span>${a.last ? esc(ago(a.last.startedAt)) : "охирги иш"}</span></div>
     </div>
-    <div><span class="chip ${({ok:"ok",warn:"warn",bad:"bad"})[a.level] || "off"}">${esc(a.label)}</span></div>
-    ${a.lastErr ? `<div class="note">Охирги хато: ${dmy(a.lastErr.startedAt)} ${hhmm(a.lastErr.startedAt)} (${esc(ago(a.lastErr.startedAt))}). Сабабини билиш учун Claude'дан «${esc(room.name)} хатосини текшир» деб сўранг.</div>` : ""}
-    <h3>Охирги ишлар</h3>
-    ${list ? `<ul class="runs">${list}</ul>` : `<div class="note">Ҳали иш йўқ ёки маълумот келмади.</div>`}
-    <a class="link" href="${N8N_URL + room.wf}" target="_blank" rel="noopener">n8n'да очиш →</a>`;
+    ${a.lastErr ? `<div class="hint">Охирги хато: ${dmy(a.lastErr.startedAt)} ${hhmm(a.lastErr.startedAt)}. Сабабини билиш учун Claude'га «${esc(room.name)} хатосини текшир» деб ёзинг.</div>` : ""}
+    <div class="h4">Охирги ишлар</div>
+    ${list ? `<ul class="runs">${list}</ul>` : `<div class="hint">Ҳали иш йўқ.</div>`}
+    <a class="lnk" href="${N8N_URL + room.wf}" target="_blank" rel="noopener">n8n'да очиш →</a>`;
 }
 
-function openDrawer(wf){
-  openWf = wf; renderDrawer(wf);
-  $("drawer").classList.add("show"); $("drawer").setAttribute("aria-hidden","false");
-  $("scrim").classList.add("show"); $("dClose").focus();
+function openSheet(wf){ openWf = wf; renderSheet(wf); $("sheet").classList.add("show"); $("sheet").setAttribute("aria-hidden","false"); $("scrim").classList.add("show"); $("shX").focus(); }
+function closeSheet(){ const was = openWf; openWf = null; $("sheet").classList.remove("show"); $("sheet").setAttribute("aria-hidden","true"); $("scrim").classList.remove("show"); const b = was && document.querySelector(`.room[data-wf="${was}"]`); if(b) b.focus(); }
+document.addEventListener("click", e => { const b = e.target.closest("[data-wf]"); if(b && !e.target.closest(".sheet")) openSheet(b.dataset.wf); });
+$("shX").addEventListener("click", closeSheet);
+$("scrim").addEventListener("click", closeSheet);
+document.addEventListener("keydown", e => { if(e.key === "Escape" && openWf) closeSheet(); });
+
+function showTab(which){
+  const kuz = which === "kuz";
+  $("tOfis").setAttribute("aria-selected", String(!kuz)); $("tKuz").setAttribute("aria-selected", String(kuz));
+  $("vOfis").style.display = kuz ? "none" : "grid";
+  $("vKuz").classList.toggle("hidden", !kuz); $("vKuz").style.display = kuz ? "grid" : "none";
+  try{ history.replaceState(null, "", kuz ? "#kuzatuv" : location.pathname); }catch(e){}
 }
-function closeDrawer(){
-  const was = openWf; openWf = null;
-  $("drawer").classList.remove("show"); $("drawer").setAttribute("aria-hidden","true");
-  $("scrim").classList.remove("show");
-  const btn = was && document.querySelector(`.room[data-wf="${was}"]`); if(btn) btn.focus();
-}
-$("floor").addEventListener("click", e => { const b = e.target.closest(".room"); if(b) openDrawer(b.dataset.wf); });
-$("dClose").addEventListener("click", closeDrawer);
-$("scrim").addEventListener("click", closeDrawer);
-document.addEventListener("keydown", e => { if(e.key === "Escape" && openWf) closeDrawer(); });
+$("tOfis").addEventListener("click", () => showTab("ofis"));
+$("tKuz").addEventListener("click", () => showTab("kuz"));
 
 function freshText(){
+  $("refresh").classList.toggle("spin", loading);
   if(loading){ $("fresh").textContent = "Янгиланмоқда…"; return; }
-  if(fetchedAt){ const iso = new Date(fetchedAt).toISOString(); $("fresh").textContent = "Янгиланди: " + hhmm(iso) + " (" + ago(iso) + ")"; }
-  else $("fresh").textContent = loadErr ? "Маълумот келмади" : "Маълумот юкланмоқда…";
+  if(fetchedAt){ const iso = new Date(fetchedAt).toISOString(); $("fresh").textContent = "Янгиланди " + hhmm(iso) + " · " + ago(iso); }
+  else $("fresh").textContent = loadErr ? "Маълумот келмади" : "Юкланмоқда…";
 }
-function notice(html){ $("notice").innerHTML = html; $("notice").classList.toggle("show", !!html); }
-
-function showGate(msg){
-  $("gate").classList.remove("hidden"); $("app").classList.add("hidden");
-  $("gateMsg").textContent = msg || "";
-  setTimeout(() => $("kod").focus(), 50);
-}
+function notice(html){ $("notice").innerHTML = html; $("notice").classList.toggle("hidden", !html); }
+function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("gateMsg").textContent = msg || ""; setTimeout(() => $("kod").focus(), 60); }
 function hideGate(){ $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); }
 
 async function load(){
-  const kod = getKod();
-  if(!kod){ showGate(""); return; }
+  const kod = getKod(); if(!kod){ showGate(""); return; }
   if(!navigator.onLine){ loadErr = "Интернет йўқ. Уланганда ўзи янгиланади."; notice(esc(loadErr)); render(); return; }
   loading = true; freshText();
   try{
     const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 30000);
     const r = await fetch(API + "?kod=" + encodeURIComponent(kod), {cache:"no-store", signal:ctrl.signal});
     clearTimeout(tm);
-    const text = await r.text();
-    let j = null; try{ j = JSON.parse(text); }catch(e){}
-    if(!r.ok){ throw new Error("n8n " + r.status + " жавоб қайтарди. AI ofis API workflow'и ёқилганини текширинг."); }
+    const text = await r.text(); let j = null; try{ j = JSON.parse(text); }catch(e){}
+    if(!r.ok) throw new Error("n8n " + r.status + " жавоб қайтарди. «AI ofis API» ёқилганини текширинг.");
     if(!j || !j.ok){ setKod(""); data = null; loading = false; showGate("Код нотўғри. Қайта киритинг."); return; }
     data = j; fetchedAt = Date.now(); loadErr = null;
-    notice(j.apiErr ? esc("Ботлар ҳолатини олиб бўлмади: n8n API калити уланмаган ёки эскирган. ") + "<span class=\"small\">(" + esc(j.apiErr).slice(0,140) + ")</span>" : "");
+    notice(j.apiErr ? "Ботлар ҳолатини олиб бўлмади: n8n API калити уланмаган ёки эскирган." : "");
   }catch(e){
-    loadErr = e.name === "AbortError" ? "n8n жавоб бермади (30 сония). Бироздан кейин «Янгилаш»ни босинг." : (e.message && e.message.startsWith("n8n") ? e.message : "Маълумот олинмади. Интернетни текширинг ва «Янгилаш»ни босинг.");
+    loadErr = e.name === "AbortError" ? "n8n 30 сонияда жавоб бермади. ↻ ни босинг." : (String(e.message || "").startsWith("n8n") ? e.message : "Маълумот олинмади. Интернетни текширинг ва ↻ ни босинг.");
     notice(esc(loadErr) + (data ? " Охирги маълумот кўрсатиляпти." : ""));
   }
   loading = false; render();
 }
 
-$("gateForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const v = $("kod").value.trim();
-  if(!v){ $("gateMsg").textContent = "Кодни киритинг."; return; }
-  setKod(v); hideGate(); load();
-});
+$("gateForm").addEventListener("submit", e => { e.preventDefault(); const v = $("kod").value.trim(); if(!v){ $("gateMsg").textContent = "Кодни киритинг."; return; } setKod(v); hideGate(); load(); });
 $("refresh").addEventListener("click", () => { if(!loading) load(); });
 $("logout").addEventListener("click", () => { setKod(""); data = null; showGate("Кодни қайта киритинг."); });
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && getKod() && Date.now() - fetchedAt > 60000) load(); });
 window.addEventListener("online", () => { if(getKod()) load(); });
 setInterval(() => { if(document.visibilityState === "visible" && getKod() && !loading) load(); }, 5*60000);
-setInterval(() => { freshText(); }, 60000);
+setInterval(freshText, 60000);
 
 render();
+if(location.hash === "#kuzatuv") showTab("kuz");
 if(getKod()){ hideGate(); load(); } else showGate("");
-
 if("serviceWorker" in navigator){ window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
 </script>
 </body>
